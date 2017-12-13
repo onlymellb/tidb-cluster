@@ -3,7 +3,7 @@
 ### This tutorial is just for Chinese users
 
 * install azure CLI 2.0 (example for macOS)
-
+j
 ```bash
 brew install azure-cli
 ```
@@ -19,6 +19,7 @@ az cloud list --query "[].name" -otsv
 
 ```bash
 az cloud set --name AzureChinaCloud
+
 az login
 ```
 

@@ -3,10 +3,10 @@
 
 ##########################variable define##################################
 WORK_DIR=$(cd $(dirname $0);pwd)
-TIDB_ANSIBLE="https://github.com/pingcap/tidb-ansible.git"
-TMP_INVENTORY="inventory.tmp"
-INVENTORY="inventory.ini"
 IP_BASE=9
+INVENTORY="inventory.ini"
+TMP_INVENTORY="inventory.tmp"
+TIDB_ANSIBLE="https://github.com/pingcap/tidb-ansible.git"
 
 ###########################################################################
 
@@ -171,6 +171,7 @@ function generate_part_inventory() {
 	echo "${group_name}" >> ${TMP_INVENTORY}
 	for i in `seq 1 ${vm_nums}`
 	do
+		# TODO: need to be handled when the number of instances is greater than 245
 		ip_suffix=$(( i+IP_BASE ))
 		echo "${ip_prefix}${ip_suffix}" >> ${TMP_INVENTORY}
 	done

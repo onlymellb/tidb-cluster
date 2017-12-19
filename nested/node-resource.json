@@ -40,7 +40,7 @@
     }
   },
   "variables": {
-	"vmStart": 1,
+    "vmStart": 1,
     "publicIPAddressType": "Dynamic",
     "privateIPAddressType": "Static",
     "publicIPAddressName": "[concat('pubip-', parameters('machineSettings').machineNamePrefix)]",
@@ -50,10 +50,10 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/publicIPAddresses",
-	  "copy": {
-	    "name": "[concat(parameters('machineSettings').machineNamePrefix, 'count-copy')]",
-		"count": "[parameters('vmCount')]"
-	  },
+      "copy": {
+        "name": "[concat(parameters('machineSettings').machineNamePrefix, 'count-copy')]",
+        "count": "[parameters('vmCount')]"
+      },
       "name": "[concat(variables('publicIPAddressName'), copyIndex(variables('vmStart')))]",
       "location": "[resourceGroup().location]",
       "properties": {
@@ -66,25 +66,25 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/networkInterfaces",
-	  "copy": {
-	    "name": "[concat(parameters('machineSettings').machineNamePrefix, 'count-copy')]",
-		"count": "[parameters('vmCount')]"
-	  },
+      "copy": {
+        "name": "[concat(parameters('machineSettings').machineNamePrefix, 'count-copy')]",
+        "count": "[parameters('vmCount')]"
+      },
       "name": "[concat(variables('networkInterfacesName'), copyIndex(variables('vmStart')))]",
       "location": "[resourceGroup().location]",
-	  "dependsOn": [
-		  "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'), copyIndex(variables('vmStart')))]"
-	  ],
+      "dependsOn": [
+          "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'), copyIndex(variables('vmStart')))]"
+      ],
       "properties": {
         "ipConfigurations": [
           {
             "name": "ipconfig1",
             "properties": {
               "privateIPAllocationMethod": "[variables('privateIPAddressType')]",
-			  "privateIPAddress": "[concat(parameters('machineSettings').machineIpPrefix, copyIndex(variables('vmStart')))]",
-			  "publicIPAddress": {
-				"id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName')]"
-			  },
+              "privateIPAddress": "[concat(parameters('machineSettings').machineIpPrefix, copyIndex(variables('vmStart')))]",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+              },
               "subnet": {
                 "id": "[parameters('networkSettings').subnetRef]"
               }
@@ -96,10 +96,10 @@
     {
       "type": "Microsoft.Compute/virtualMachines",
       "apiVersion": "2015-06-15",
-	  "copy": {
-	    "name": "[concat(parameters('machineSettings').machineNamePrefix, 'count-copy')]",
-		"count": "[parameters('vmCount')]"
-	  },
+      "copy": {
+        "name": "[concat(parameters('machineSettings').machineNamePrefix, 'count-copy')]",
+        "count": "[parameters('vmCount')]"
+      },
       "name": "[concat(parameters('machineSettings').machineNamePrefix, copyIndex(variables('vmStart')))]",
       "location": "[resourceGroup().location]",
       "dependsOn": [

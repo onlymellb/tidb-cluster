@@ -41,6 +41,7 @@
   },
   "variables": {
     "vmStart": 1,
+    "ipBase": 9,
     "publicIPAddressType": "Dynamic",
     "privateIPAddressType": "Static",
     "publicIPAddressName": "[concat('pubip-', parameters('machineSettings').machineNamePrefix)]",
@@ -81,7 +82,7 @@
             "name": "ipconfig1",
             "properties": {
               "privateIPAllocationMethod": "[variables('privateIPAddressType')]",
-              "privateIPAddress": "[concat(parameters('machineSettings').machineIpPrefix, copyIndex(variables('vmStart')))]",
+              "privateIPAddress": "[concat(parameters('machineSettings').machineIpPrefix, add(variables(ipBase), copyIndex(variables('vmStart'))))]",
               "publicIPAddress": {
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(variables('publicIPAddressName'), copyIndex(variables('vmStart'))))]"
               },

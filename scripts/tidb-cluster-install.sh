@@ -6,6 +6,7 @@ WORK_DIR=$(cd $(dirname $0);pwd)
 TIDB_ANSIBLE="https://github.com/pingcap/tidb-ansible.git"
 TMP_INVENTORY="inventory.tmp"
 INVENTORY="inventory.ini"
+IP_BASE=9
 
 ###########################################################################
 
@@ -165,11 +166,13 @@ function generate_part_inventory() {
 	local vm_nums=$1
 	local ip_prefix=$2
 	local group_name=$3
+	local ip_suffix
 
 	echo "${group_name}" >> ${TMP_INVENTORY}
 	for i in `seq 1 ${vm_nums}`
 	do
-		echo "${ip_prefix}${i}" >> ${TMP_INVENTORY}
+		ip_suffix=$(( i+IP_BASE ))
+		echo "${ip_prefix}${ip_suffix}" >> ${TMP_INVENTORY}
 	done
 	printf "\n\n" >>  ${TMP_INVENTORY}
 }

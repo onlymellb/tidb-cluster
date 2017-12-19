@@ -1,0 +1,141 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "commonSettings": {
+      "type": "object",
+      "metadata": {
+        "Description": "Common settings object"
+      }
+    },
+    "storageSettings": {
+      "type": "object",
+      "metadata": {
+        "Description": "Storage settings object"
+      }
+    },
+    "networkSettings": {
+      "type": "object",
+      "metadata": {
+        "Description": "Network settings object"
+      }
+    },
+    "machineSettings": {
+      "type": "object",
+      "metadata": {
+        "Description": "Machine settings object"
+      }
+    },
+    "vmCount": {
+      "type": "int",
+      "metadata": {
+        "Description": "The number of VM instances to be created"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "Description": "Administrator password used when provisioning virtual machines"
+      }
+    }
+  },
+  "variables": {
+	"vmStart": 1,
+    "publicIPAddressType": "Dynamic",
+    "privateIPAddressType": "Static",
+    "publicIPAddressName": "[concat('pubip-', parameters('machineSettings').machineNamePrefix)]",
+    "networkInterfacesName": "[concat('nic-', parameters('machineSettings').machineNamePrefix)]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/publicIPAddresses",
+	  "copy": {
+	    "name": "[concat(parameters('machineSettings').machineNamePrefix, 'count-copy')]",
+		"count": "[parameters('vmCount')]"
+	  },
+      "name": "[concat(variables('publicIPAddressName'), copyIndex(variables('vmStart')))]",
+      "location": "[variables('location')]",
+      "properties": {
+        "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
+        "dnsSettings": {
+          "domainNameLabel": "[concat(parameters('machineSettings').machineNamePrefix, copyIndex(variables('vmStart')))]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkInterfaces",
+	  "copy": {
+	    "name": "[concat(parameters('machineSettings').machineNamePrefix, 'count-copy')]",
+		"count": "[parameters('vmCount')]"
+	  },
+      "name": "[concat(variables('networkInterfacesName'), copyIndex(variables('vmStart')))]",
+      "location": "[resourceGroup().location]",
+	  "dependsOn": [
+		  "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'), copyIndex(variables('vmStart')))]"
+	  ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "[variables('privateIPAddressType')]",
+			  "privateIPAddress": "[concat(parameters('machineSettings').machineIpPrefix, copyIndex(variables('vmStart')))]",
+			  "publicIPAddress": {
+				"id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName')]"
+			  },
+              "subnet": {
+                "id": "[parameters('networkSettings').subnetRef]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2015-06-15",
+	  "copy": {
+	    "name": "[concat(parameters('machineSettings').machineNamePrefix, 'count-copy')]",
+		"count": "[parameters('vmCount')]"
+	  },
+      "name": "[concat(parameters('machineSettings').machineNamePrefix, copyIndex(variables('vmStart')))]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfacesName'), copyIndex(variables('vmStart')))]"
+      ],
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('commonSettings').availabilitySetName)]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('machineSettings').vmSize]"
+        },
+        "osProfile": {
+          "computerName": "[concat(parameters('machineSettings').machineNamePrefix, copyIndex(variables('vmStart')))]",
+          "adminUsername": "[parameters('machineSettings').adminUsername]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": "[parameters('machineSettings').osImageReference]",
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat(parameters('storageSettings').destinationVhdsContainer, parameters('machineSettings').machineName, '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('networkInterfacesName'), copyIndex(variables('vmStart'))))]"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

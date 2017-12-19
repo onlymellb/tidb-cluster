@@ -1,0 +1,120 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "commonSettings": {
+      "type": "object",
+      "metadata": {
+        "Description": "Common settings object"
+      }
+    },
+    "storageSettings": {
+      "type": "object",
+      "metadata": {
+        "Description": "Storage settings object"
+      }
+    },
+    "allNetworkSettings": {
+      "type": "object",
+      "metadata": {
+        "Description": "Network settings object"
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[concat(parameters('storageSettings').vhdStorageAccountName)]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "accountType": "Standard_LRS"
+      }
+    },
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[parameters('commonSettings').pdAVSName]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "PlatformFaultDomainCount": "3",
+        "PlatformUpdateDomainCount": "5"
+      }
+    },
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[parameters('commonSettings').tidbAVSName]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "PlatformFaultDomainCount": "3",
+        "PlatformUpdateDomainCount": "5"
+      }
+    },
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[parameters('commonSettings').tikvAVSName]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "PlatformFaultDomainCount": "3",
+        "PlatformUpdateDomainCount": "5"
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/routeTables",
+      "name": "[parameters('allNetworkSettings').routeTableName]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "routes": [
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('allNetworkSettings').virtualNetworkName]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/routeTables/', parameters('allNetworkSettings').routeTableName)]"
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('allNetworkSettings').addressPrefix]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('allNetworkSettings').pdNetworkSettings.subnetName]",
+            "properties": {
+              "addressPrefix": "[parameters('allNetworkSettings').pdNetworkSettings.subnetPrefix]",
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', parameters('allNetworkSettings').routeTableName)]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('allNetworkSettings').tidbNetworkSettings.subnetName]",
+            "properties": {
+              "addressPrefix": "[parameters('allNetworkSettings').tidbNetworkSettings.subnetPrefix]",
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', parameters('allNetworkSettings').routeTableName)]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('allNetworkSettings').tikvNetworkSettings.subnetName]",
+            "properties": {
+              "addressPrefix": "[parameters('allNetworkSettings').tikvNetworkSetting.subnetPrefix]",
+              "routeTable": {
+                "id": "[resourceId('Microsoft.Network/routeTables', parameters('allNetworkSettings').routeTableName)]"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

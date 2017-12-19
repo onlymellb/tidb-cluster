@@ -6,7 +6,7 @@
 	  "value": "tidbclusterdeploy"
     },
 	"virtualNetworkName": {
-      "value": "tidbClustVnet"
+      "value": "tidbClusterVnet"
     },
     "adminUsername": {
 		"value": "tidb"

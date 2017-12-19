@@ -130,7 +130,7 @@
             "properties": {
               "addressPrefix": "[parameters('tidbNetworkSettings').subnetPrefix]",
               "routeTable": {
-                "id": "[resourceId('Microsoft.Network/routeTables', parameters('routeTableName')]"
+                "id": "[resourceId('Microsoft.Network/routeTables', parameters('routeTableName'))]"
               }
             }
           },
@@ -139,7 +139,7 @@
             "properties": {
               "addressPrefix": "[parameters('tikvNetworkSettings').subnetPrefix]",
               "routeTable": {
-                "id": "[resourceId('Microsoft.Network/routeTables', parameters('routeTableName')]"
+                "id": "[resourceId('Microsoft.Network/routeTables', parameters('routeTableName'))]"
               }
             }
           }

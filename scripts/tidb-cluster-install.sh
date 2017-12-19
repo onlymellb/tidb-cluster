@@ -174,7 +174,7 @@ function generate_part_inventory() {
 	printf "\n\n" >>  ${TMP_INVENTORY}
 }
 
-#init_env
+init_env
 generate_inventory
 echo "username: ${USERNAME}"
 echo "password: ${PASSWORD}"

@@ -14,10 +14,40 @@
         "Description": "Storage settings object"
       }
     },
-    "allNetworkSettings": {
+    "pdNetworkSettings": {
       "type": "object",
       "metadata": {
-        "Description": "Network settings object"
+        "Description": "Pd network settings object"
+      }
+    },
+    "tidbNetworkSettings": {
+      "type": "object",
+      "metadata": {
+        "Description": "Tidb network settings object"
+      }
+    },
+    "tikvNetworkSettings": {
+      "type": "object",
+      "metadata": {
+        "Description": "Tikv network settings object"
+      }
+    },
+    "routeTableName": {
+      "type": "string",
+      "metadata": {
+        "Description": "The route table name"
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "metadata": {
+        "Description": "The virtual network name"
+      }
+    },
+    "addressPrefix": {
+      "type": "string",
+      "metadata": {
+        "Description": "The virtual network address prefix"
       }
     }
   },
@@ -64,7 +94,7 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/routeTables",
-      "name": "[parameters('allNetworkSettings').routeTableName]",
+      "name": "[parameters('routeTableName')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "routes": [
@@ -74,42 +104,42 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/virtualNetworks",
-      "name": "[parameters('allNetworkSettings').virtualNetworkName]",
+      "name": "[parameters('virtualNetworkName')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Network/routeTables/', parameters('allNetworkSettings').routeTableName)]"
+        "[concat('Microsoft.Network/routeTables/', parameters('routeTableName'))]"
       ],
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
-            "[parameters('allNetworkSettings').addressPrefix]"
+            "[parameters('addressPrefix')]"
           ]
         },
         "subnets": [
           {
-            "name": "[parameters('allNetworkSettings').pdNetworkSettings.subnetName]",
+            "name": "[parameters('pdNetworkSettings').subnetName]",
             "properties": {
-              "addressPrefix": "[parameters('allNetworkSettings').pdNetworkSettings.subnetPrefix]",
+              "addressPrefix": "[parameters('pdNetworkSettings').subnetPrefix]",
               "routeTable": {
-                "id": "[resourceId('Microsoft.Network/routeTables', parameters('allNetworkSettings').routeTableName)]"
+                "id": "[resourceId('Microsoft.Network/routeTables', parameters('routeTableName'))]"
               }
             }
           },
           {
-            "name": "[parameters('allNetworkSettings').tidbNetworkSettings.subnetName]",
+            "name": "[parameters('tidbNetworkSettings').subnetName]",
             "properties": {
-              "addressPrefix": "[parameters('allNetworkSettings').tidbNetworkSettings.subnetPrefix]",
+              "addressPrefix": "[parameters('tidbNetworkSettings').subnetPrefix]",
               "routeTable": {
-                "id": "[resourceId('Microsoft.Network/routeTables', parameters('allNetworkSettings').routeTableName)]"
+                "id": "[resourceId('Microsoft.Network/routeTables', parameters('routeTableName')]"
               }
             }
           },
           {
-            "name": "[parameters('allNetworkSettings').tikvNetworkSettings.subnetName]",
+            "name": "[parameters('tikvNetworkSettings').subnetName]",
             "properties": {
-              "addressPrefix": "[parameters('allNetworkSettings').tikvNetworkSetting.subnetPrefix]",
+              "addressPrefix": "[parameters('tikvNetworkSettings').subnetPrefix]",
               "routeTable": {
-                "id": "[resourceId('Microsoft.Network/routeTables', parameters('allNetworkSettings').routeTableName)]"
+                "id": "[resourceId('Microsoft.Network/routeTables', parameters('routeTableName')]"
               }
             }
           }

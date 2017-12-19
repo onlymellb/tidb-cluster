@@ -152,7 +152,7 @@
     "vmStorageAccountContainerName": "vhd-tidb",
     "vmStorageAccountDomain": ".blob.core.chinacloudapi.cn",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-    "templateBaseUrl": "[variables('artifactsLocation')]",
+    "templateBaseUrl": "[parameters('artifactsLocation')]",
     "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
     "vmTemplateUrl": "[concat(variables('templateBaseUrl'), 'node-resources.json')]",
     "commonSettings": {
@@ -161,9 +161,8 @@
       "tikvAVSName": "tikvAvailSet"
     },
     "storageSettings": {
-      "vhdStorageAccountName": "[parameters('storageAccountName')]",
       "vhdContainerName": "[variables('vmStorageAccountContainerName')]",
-      "destinationVhdsContainer": "[concat('https://', parameters('vhdStorageAccountName'), variables('vmStorageAccountDomain'), '/', variables('vmStorageAccountContainerName'), '/')]"
+      "destinationVhdsContainer": "[concat('https://', parameters('storageAccountName'), variables('vmStorageAccountDomain'), '/', variables('vmStorageAccountContainerName'), '/')]"
     },
     "pdNetworkSettings": {
       "subnetName": "[parameters('pdSubnetName')]",
@@ -180,7 +179,7 @@
       "subnetPrefix": "[parameters('tikvSubnetPrefix')]",
       "subnetRef": "[concat(variables('vnetID'), '/subnets/', parameters('tikvSubnetName'))]"
     },
-    "scriptsToDownload": "[concat(variables('artifactsLocation'), 'scripts/tidb-cluster-install.sh')]"
+    "scriptsToDownload": "[concat(parameters('artifactsLocation'), 'scripts/tidb-cluster-install.sh')]"
   },
   "resources": [
     {
@@ -200,16 +199,24 @@
           "storageSettings": {
             "value": "[variables('storageSettings')]"
           },
-          "allNetworkSettings": {
-            "value": {
-              "routeTableName": "[variables('routeTableName')]",
-              "virtualNetworkName": "[variables('virtualNetworkName')]",
-              "addressPrefix": "[variables('addressPrefix')]",
-              "pdNetworkSettings": "[variables('pdNetworkSettings')]",
-              "tidbNetworkSettings": "[variables('tidbNetworkSettings')]",
-              "tikvNetworkSettings": "[variables('tikvNetworkSettings')]"
-            }
-          }
+		  "pdNetworkSettings": {
+			"value": "[variables('pdNetworkSettings')]"
+		  },
+		  "tidbNetworkSettings": {
+			"value": "[variables('tidbNetworkSettings')]"
+		  },
+		  "tikvNetworkSettings": {
+		     "value": "[variables('tikvNetworkSettings')]"
+		  },
+		  "routeTableName": {
+		     "value": "[variables('routeTableName')]"
+		  },
+		  "virtualNetworkName": {
+			 "value": "[variables('virtualNetworkName')]"
+		  },
+		  "addressPrefix": {
+		     "value": "[variables('addressPrefix')]"
+		  }
         }
       }
     },
@@ -242,7 +249,7 @@
             "value": {
               "adminUsername": "[parameters('adminUsername')]",
               "machineNamePrefix": "pd-",
-              "machineIpPrefix": "[concat(variables('pdIpPrefix')), '.']",
+              "machineIpPrefix": "[concat(variables('pdIpPrefix'), '.')]",
               "osImageReference": "[variables('osImageReference')]",
               "vmSize": "[variables('pdVmSize')]"
             }
@@ -285,7 +292,7 @@
             "value": {
               "adminUsername": "[parameters('adminUsername')]",
               "machineNamePrefix": "tikv-",
-              "machineIpPrefix": "[concat(variables('tikvIpPrefix')), '.']",
+              "machineIpPrefix": "[concat(variables('tikvIpPrefix'), '.')]",
               "osImageReference": "[variables('osImageReference')]",
               "vmSize": "[variables('tikvVmSize')]"
             }
@@ -328,7 +335,7 @@
             "value": {
               "adminUsername": "[parameters('adminUsername')]",
               "machineNamePrefix": "tidb-",
-              "machineIpPrefix": "[concat(variables('tikvIpPrefix')), '.']",
+              "machineIpPrefix": "[concat(variables('tidbIpPrefix'), '.')]",
               "osImageReference": "[variables('osImageReference')]",
               "vmSize": "[variables('tidbVmSize')]"
             }
@@ -358,7 +365,7 @@
         "typeHandlerVersion": "2.0",
         "autoUpgradeMinorVersion": true,
         "settings": {
-          "fileUris": "[concat(variables('artifactsLocation'), 'scripts/tidb-cluster-install.sh')]"
+          "fileUris": "[concat(parameters('artifactsLocation'), 'scripts/tidb-cluster-install.sh')]"
         },
         "protectedSettings": {
           "commandToExecute": "[concat('./tidb-cluster-install.sh -v ', parameters('tidbVersion'), ' -u ', parameters('adminUsername'), ' -p ', parameters('adminPassword'), ' -d ', parameters('pdCount'), ' -D ', variables('pdIpPrefix'), ' -b ', parameters('tidbCount'), ' -B ', variables('tidbIpPrefix'), ' -k ', parameters('tikvCount'), ' -K ', variables('tikvIpPrefix'))]"
@@ -369,7 +376,7 @@
   "outputs": {
     "installServerPublicIp": {
       "type": "string",
-      "value": "[reference(variables('pubip-tikv-1')).ipAddress]"
+      "value": "deploy tidb cluster ended"
     }
   }
 }

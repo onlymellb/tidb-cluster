@@ -55,7 +55,7 @@
 		"count": "[parameters('vmCount')]"
 	  },
       "name": "[concat(variables('publicIPAddressName'), copyIndex(variables('vmStart')))]",
-      "location": "[variables('location')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
         "dnsSettings": {

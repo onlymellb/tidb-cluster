@@ -154,7 +154,7 @@
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
     "templateBaseUrl": "[parameters('artifactsLocation')]",
     "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'nested/shared-resources.json')]",
-    "vmTemplateUrl": "[concat(variables('templateBaseUrl'), 'nested/node-resources.json')]",
+    "vmTemplateUrl": "[concat(variables('templateBaseUrl'), 'nested/node-resource.json')]",
     "commonSettings": {
       "pdAVSName": "pdAvailSet",
       "tidbAVSName": "tidbAvailSet",
@@ -252,7 +252,7 @@
               "machineNamePrefix": "pd-",
               "machineIpPrefix": "[concat(variables('pdIpPrefix'), '.')]",
               "osImageReference": "[variables('osImageReference')]",
-              "vmSize": "[variables('pdVmSize')]"
+              "vmSize": "[parameters('pdVmSize')]"
             }
           },
           "vmCount": {
@@ -295,7 +295,7 @@
               "machineNamePrefix": "tikv-",
               "machineIpPrefix": "[concat(variables('tikvIpPrefix'), '.')]",
               "osImageReference": "[variables('osImageReference')]",
-              "vmSize": "[variables('tikvVmSize')]"
+              "vmSize": "[parameters('tikvVmSize')]"
             }
           },
           "vmCount": {
@@ -338,7 +338,7 @@
               "machineNamePrefix": "tidb-",
               "machineIpPrefix": "[concat(variables('tidbIpPrefix'), '.')]",
               "osImageReference": "[variables('osImageReference')]",
-              "vmSize": "[variables('tidbVmSize')]"
+              "vmSize": "[parameters('tidbVmSize')]"
             }
           },
           "vmCount": {

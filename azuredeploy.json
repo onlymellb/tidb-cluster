@@ -200,24 +200,24 @@
           "storageSettings": {
             "value": "[variables('storageSettings')]"
           },
-		  "pdNetworkSettings": {
-			"value": "[variables('pdNetworkSettings')]"
-		  },
-		  "tidbNetworkSettings": {
-			"value": "[variables('tidbNetworkSettings')]"
-		  },
-		  "tikvNetworkSettings": {
-		     "value": "[variables('tikvNetworkSettings')]"
-		  },
-		  "routeTableName": {
-		     "value": "[parameters('routeTableName')]"
-		  },
-		  "virtualNetworkName": {
-			 "value": "[parameters('virtualNetworkName')]"
-		  },
-		  "addressPrefix": {
-		     "value": "[parameters('addressPrefix')]"
-		  }
+          "pdNetworkSettings": {
+            "value": "[variables('pdNetworkSettings')]"
+          },
+          "tidbNetworkSettings": {
+            "value": "[variables('tidbNetworkSettings')]"
+          },
+          "tikvNetworkSettings": {
+             "value": "[variables('tikvNetworkSettings')]"
+          },
+          "routeTableName": {
+             "value": "[parameters('routeTableName')]"
+          },
+          "virtualNetworkName": {
+             "value": "[parameters('virtualNetworkName')]"
+          },
+          "addressPrefix": {
+             "value": "[parameters('addressPrefix')]"
+          }
         }
       }
     },
@@ -366,7 +366,9 @@
         "typeHandlerVersion": "2.0",
         "autoUpgradeMinorVersion": true,
         "settings": {
-          "fileUris": "[concat(parameters('artifactsLocation'), 'scripts/tidb-cluster-install.sh')]"
+          "fileUris": [
+            "[concat(parameters('artifactsLocation'), 'scripts/tidb-cluster-install.sh')]"
+          ]
         },
         "protectedSettings": {
           "commandToExecute": "[concat('./tidb-cluster-install.sh -v ', parameters('tidbVersion'), ' -u ', parameters('adminUsername'), ' -p ', parameters('adminPassword'), ' -d ', parameters('pdCount'), ' -D ', variables('pdIpPrefix'), ' -b ', parameters('tidbCount'), ' -B ', variables('tidbIpPrefix'), ' -k ', parameters('tikvCount'), ' -K ', variables('tikvIpPrefix'))]"

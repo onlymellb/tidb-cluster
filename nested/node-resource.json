@@ -83,7 +83,7 @@
               "privateIPAllocationMethod": "[variables('privateIPAddressType')]",
               "privateIPAddress": "[concat(parameters('machineSettings').machineIpPrefix, copyIndex(variables('vmStart')))]",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'), copyIndex(variables('vmStart')))]"
               },
               "subnet": {
                 "id": "[parameters('networkSettings').subnetRef]"

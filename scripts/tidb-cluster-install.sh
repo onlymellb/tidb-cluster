@@ -2,7 +2,6 @@
 
 
 ##########################variable define##################################
-WORK_DIR=$(cd $(dirname $0);pwd)
 IP_BASE=9
 INVENTORY="inventory.ini"
 TMP_INVENTORY="inventory.tmp"
@@ -127,8 +126,9 @@ done
 
 ### Initialize the environment
 function init_env() {
-	yum install -y git
-	git clone ${TIDB_ANSIBLE}
+	yum install -y git epel-release sshpass
+	yum install -y python-pip
+	pip install ansible==2.4.0
 }
 
 ### Generate ansible's inventory
@@ -148,6 +148,9 @@ function generate_inventory() {
 	notice "start to generate pd inventory, nums: ${PD_NUMBLES}, ip_prefix: ${PD_IP_PREFIX}"
 	generate_part_inventory ${PD_NUMBLES} ${PD_IP_PREFIX} "[pd_servers]"
 
+	# deploy monitoring on the first pd server
+	generate_monitor_inventory
+
 	# start to generate global variables
 	notice "start to generate global variables"
 	local start_point=`grep -n "\[all:vars\]" ${INVENTORY}|cut -d: -f1`
@@ -158,8 +161,19 @@ function generate_inventory() {
 	notice "start to adjust some variables"
 	sed -i "s/deploy_dir\(.*\)/deploy_dir = \/home\/${USERNAME}\/deploy/g" ${TMP_INVENTORY}
 
-	# turn off the time zone setting
-	sed -i "s/set_timezone\(.*\)/# set_timezone\1/g" ${TMP_INVENTORY}
+	# modify tidb version
+	sed -i "s/tidb_version\(.*\)/tidb_version = ${TIDB_VERSION}/g" ${TMP_INVENTORY}
+
+	# turn off machine disk benchmark
+	sed -i "s/machine_benchmark\(.*\)/machine_benchmark = False/g" ${TMP_INVENTORY}
+
+	# turn off the time zone setting and ntpd check
+	sed -i "s/set_timezone\(.*\)/set_timezone = False/g" ${TMP_INVENTORY}
+	sed -i "s/enable_ntpd\(.*\)/enable_ntpd = False/g" ${TMP_INVENTORY}
+
+	# modify ansible.cfg timeout option
+	sed -i "s/timeout\(.*\)/timeout = 30/g" ansible.cfg
+	mv ${TMP_INVENTORY} ${INVENTORY}
 }
 
 function generate_part_inventory() {
@@ -173,13 +187,48 @@ function generate_part_inventory() {
 	do
 		# TODO: need to be handled when the number of instances is greater than 245
 		ip_suffix=$(( i+IP_BASE ))
-		echo "${ip_prefix}${ip_suffix}" >> ${TMP_INVENTORY}
+		echo "${ip_prefix}.${ip_suffix}" >> ${TMP_INVENTORY}
 	done
-	printf "\n\n" >>  ${TMP_INVENTORY}
+	printf "\n" >>  ${TMP_INVENTORY}
+}
+
+function generate_monitor_inventory() {
+	local ip_suffix=$(( 1+IP_BASE ))
+	local monitor_ip=${PD_IP_PREFIX}.${ip_suffix}
+>> ${TMP_INVENTORY} cat << EOF
+[monitoring_servers]
+${monitor_ip}
+
+[grafana_servers]
+${monitor_ip}
+
+[monitored_servers:children]
+tidb_servers
+tikv_servers
+pd_servers
+
+EOF
+}
+
+function deploy_tidb_cluster() {
+	local ansible_args="-u ${USERNAME} -e ansible_ssh_pass='${PASSWORD}' -e ansible_become_pass='${PASSWORD}'"
+	ansible-playbook local_prepare.yml ${ansible_args}
+	ansible-playbook bootstrap.yml ${ansible_args}
+	ansible-playbook deploy.yml ${ansible_args}
+	ansible-playbook start.yml ${ansible_args}
 }
 
 init_env
+
+### change workspace
+RELATIVE_WORK_DIR=`echo ${TIDB_ANSIBLE}|awk -F'[/.]' '{if( $NF=="git")print $(NF-1);else print $NF}'`
+[[ -d ${RELATIVE_WORK_DIR} ]] && rm -rf ${RELATIVE_WORK_DIR}
+git clone ${TIDB_ANSIBLE}
+cd ${RELATIVE_WORK_DIR}
+
 generate_inventory
+deploy_tidb_cluster
+
 echo "username: ${USERNAME}"
 echo "password: ${PASSWORD}"
 echo "tidb version: ${TIDB_VERSION}"
@@ -189,4 +238,3 @@ echo "tidb numbles: ${TIDB_NUMBLES}"
 echo "tidb ip prefix: ${TIDB_IP_PREFIX}"
 echo "tikv numbles: ${TIKV_NUMBLES}"
 echo "tikv ip prefix: ${TIKV_IP_PREFIX}"
-# ansible-playbook -i ./hosts site.yml -e target=azure -e role=test -e ansible_become_pass='PingCAP!23'

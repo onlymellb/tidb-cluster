@@ -2,29 +2,29 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-	"storageAccountName": {
-	  "value": "tidbclusterdeploy"
+    "storageAccountName": {
+      "value": "tidbclusterdeploy"
     },
-	"virtualNetworkName": {
+    "virtualNetworkName": {
       "value": "tidbClusterVnet"
     },
     "adminUsername": {
-		"value": "tidb"
+        "value": "tidb"
     },
     "adminPassword": {
-		"value": "PingCAP!23"
+        "value": "PingCAP!23"
     },
     "tidbVersion": {
-		"value": "latest"
+        "value": "latest"
     },
-	"pdCount": {
-		"value": 1
-	},
-	"tidbCount": {
-		"value": 1
-	},
-	"tikvCount": {
-		"value": 3
-	}
+    "pdCount": {
+        "value": 1
+    },
+    "tidbCount": {
+        "value": 1
+    },
+    "tikvCount": {
+        "value": 3
+    }
   }
 }

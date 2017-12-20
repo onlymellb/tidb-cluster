@@ -174,9 +174,6 @@ function generate_inventory() {
 	# modify ansible.cfg timeout option
 	sed -i "s/timeout\(.*\)/timeout = 30/g" ansible.cfg
 
-	# this is a temporary workaround, when the upstream solve this problem, delete this code
-	sed -i "s/min_open_fds\(.*\)/min_open_fds: 1000/g" ${TIDB_ANSIBLE}/roles/check_config_dynamic/defaults/main.yml
-
 	mv ${TMP_INVENTORY} ${INVENTORY}
 }
 
@@ -229,6 +226,8 @@ RELATIVE_WORK_DIR=`echo ${TIDB_ANSIBLE}|awk -F'[/.]' '{if( $NF=="git")print $(NF
 [[ -d ${RELATIVE_WORK_DIR} ]] && rm -rf ${RELATIVE_WORK_DIR}
 git clone ${TIDB_ANSIBLE}
 cd ${RELATIVE_WORK_DIR}
+# this is a temporary workaround, when the upstream solve this problem, delete this code
+sed -i "s/min_open_fds\(.*\)/min_open_fds: 1000/g" roles/check_config_dynamic/defaults/main.yml
 
 generate_inventory
 deploy_tidb_cluster

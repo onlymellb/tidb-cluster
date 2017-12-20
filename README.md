@@ -42,3 +42,12 @@ az group deployment create \
 --name tidbcluster \
 --parameters @azuredeploy.parameters.json
 ```
+
+* get the monitoring address
+
+```bash
+echo http://$(az network public-ip list -g test-tidb --query "[?dnsSettings.domainNameLabel=='pd-1'].dnsSettings.fqdn" -otsv):3000
+
+username: admin
+password: admin
+```

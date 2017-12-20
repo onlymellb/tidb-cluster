@@ -29,6 +29,7 @@
     "pdCount": {
       "type": "int",
       "minValue": 1,
+      "maxValue": 245,
       "metadata": {
         "description": "The numble of the pd instances to be deployed on the cluster"
       }
@@ -36,6 +37,7 @@
     "tidbCount": {
       "type": "int",
       "minValue": 1,
+      "maxValue": 245,
       "metadata": {
         "description": "The numble of the tidb instances to be deployed on the cluster"
       }
@@ -43,6 +45,7 @@
     "tikvCount": {
       "type": "int",
       "minValue": 3,
+      "maxValue": 245,
       "metadata": {
         "description": "The numble of the tikv instances to be deployed on the cluster"
       }

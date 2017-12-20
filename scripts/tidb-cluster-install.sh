@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 
 ##########################variable define##################################
@@ -173,6 +173,10 @@ function generate_inventory() {
 
 	# modify ansible.cfg timeout option
 	sed -i "s/timeout\(.*\)/timeout = 30/g" ansible.cfg
+
+	# this is a temporary workaround, when the upstream solve this problem, delete this code
+	sed -i "s/min_open_fds\(.*\)/min_open_fds: 1000/g" ${TIDB_ANSIBLE}/roles/check_config_dynamic/defaults/main.yml
+
 	mv ${TMP_INVENTORY} ${INVENTORY}
 }
 

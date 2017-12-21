@@ -29,7 +29,7 @@
     "pdCount": {
       "type": "int",
       "minValue": 1,
-      "maxValue": 245,
+      "maxValue": 200,
       "metadata": {
         "description": "The numble of the pd instances to be deployed on the cluster"
       }
@@ -92,6 +92,13 @@
         "description": "Virtual machine size for the pd virtual machine"
       }
     },
+    "monitorVmSize": {
+      "type": "string",
+      "defaultValue": "Standard_A2",
+      "metadata": {
+        "description": "Virtual machine size for the monitor virtual machine"
+      }
+    },
     "tidbSubnetName": {
       "type": "string",
       "defaultValue": "tidbSubnet",
@@ -152,12 +159,12 @@
     "pdIpPrefix": "[substring(parameters('pdSubnetPrefix'), 0, lastIndexOf(parameters('pdSubnetPrefix'), '.'))]",
     "tidbIpPrefix": "[substring(parameters('tidbSubnetPrefix'), 0, lastIndexOf(parameters('tidbSubnetPrefix'), '.'))]",
     "tikvIpPrefix": "[substring(parameters('tikvSubnetPrefix'), 0, lastIndexOf(parameters('tikvSubnetPrefix'), '.'))]",
+    "monitorIpAddr": "[concat(variables('pdIpPrefix'), '.254')]",
     "vmStorageAccountContainerName": "vhd-tidb",
     "vmStorageAccountDomain": ".blob.core.chinacloudapi.cn",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
     "templateBaseUrl": "[parameters('artifactsLocation')]",
     "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'nested/shared-resources.json')]",
-    "vmTemplateUrl": "[concat(variables('templateBaseUrl'), 'nested/node-resource.json')]",
     "commonSettings": {
       "pdAVSName": "pdAvailSet",
       "tidbAVSName": "tidbAvailSet",
@@ -176,6 +183,7 @@
     "tidbNetworkSettings": {
       "subnetName": "[parameters('tidbSubnetName')]",
       "subnetPrefix": "[parameters('tidbSubnetPrefix')]",
+      "lbName": "tidb-svc",
       "subnetRef": "[concat(variables('vnetID'), '/subnets/', parameters('tidbSubnetName'))]"
     },
     "tikvNetworkSettings": {
@@ -234,7 +242,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[variables('vmTemplateUrl')]",
+          "uri": "[concat(variables('templateBaseUrl'), 'nested/node-resource.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -277,7 +285,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[variables('vmTemplateUrl')]",
+          "uri": "[concat(variables('templateBaseUrl'), 'nested/node-resource.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -320,7 +328,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[variables('vmTemplateUrl')]",
+          "uri": "[concat(variables('templateBaseUrl'), 'nested/tidb-node-resource.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -354,14 +362,55 @@
       }
     },
     {
+      "type": "Microsoft.Resources/deployments",
+      "name": "monitor-node-resources",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "[concat('Microsoft.Resources/deployments/', 'shared-resources')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUrl'), 'nested/monitor-node-resource.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "commonSettings": {
+            "value": {
+              "availabilitySetName": "[variables('commonSettings').pdAVSName]"
+            }
+          },
+          "storageSettings": {
+            "value": "[variables('storageSettings')]"
+          },
+          "networkSettings": {
+            "value": "[variables('pdNetworkSettings')]"
+          },
+          "machineSettings": {
+            "value": {
+              "adminUsername": "[parameters('adminUsername')]",
+              "machineName": "monitor",
+              "machineIp": "[variables('monitorIpAddr')]",
+              "osImageReference": "[variables('osImageReference')]",
+              "vmSize": "[parameters('monitorVmSize')]"
+            }
+          },
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
+          }
+        }
+      }
+    },
+    {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat('tikv-1', '/installscript')]",
+      "name": "[concat('monitor', '/installscript')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Resources/deployments/', 'pd-node-resources')]",
         "[concat('Microsoft.Resources/deployments/', 'tidb-node-resources')]",
-        "[concat('Microsoft.Resources/deployments/', 'tikv-node-resources')]"
+        "[concat('Microsoft.Resources/deployments/', 'tikv-node-resources')]",
+        "[concat('Microsoft.Resources/deployments/', 'monitor-node-resources')]"
       ],
       "properties": {
         "publisher": "Microsoft.Azure.Extensions",
@@ -374,15 +423,19 @@
           ]
         },
         "protectedSettings": {
-          "commandToExecute": "[concat('./tidb-cluster-install.sh -v ', parameters('tidbVersion'), ' -u ', parameters('adminUsername'), ' -p ', parameters('adminPassword'), ' -d ', parameters('pdCount'), ' -D ', variables('pdIpPrefix'), ' -b ', parameters('tidbCount'), ' -B ', variables('tidbIpPrefix'), ' -k ', parameters('tikvCount'), ' -K ', variables('tikvIpPrefix'))]"
+          "commandToExecute": "[concat('./tidb-cluster-install.sh -v ', parameters('tidbVersion'), ' -u ', parameters('adminUsername'), ' -p ', parameters('adminPassword'), ' -d ', parameters('pdCount'), ' -D ', variables('pdIpPrefix'), ' -b ', parameters('tidbCount'), ' -B ', variables('tidbIpPrefix'), ' -k ', parameters('tikvCount'), ' -K ', variables('tikvIpPrefix'), ' -m ', variables('monitorIpAddr'))]"
         }
       }
     }
   ],
   "outputs": {
-    "installServerPublicIp": {
+    "monitorPublicEndpoint": {
       "type": "string",
-      "value": "deploy tidb cluster ended"
+      "value": "[reference('monitor-node-resources').outputs.monitorPublicEndpoint.value]"
+    },
+    "tidbServerDns": {
+      "type": "string",
+      "value": "[reference('tidb-node-resources').outputs.tidbServerDns.value]"
     }
   }
 }

@@ -29,7 +29,7 @@ function logger() {
    shift && shift && shift
    cur_msg=$*
 
-   [[ ${LOGGER_LEVEL} -lt ${cur_level} ]] && return 0 #|| mkdir -p ${LOGGER_PATH}
+   [[ ${LOGGER_LEVEL} -lt ${cur_level} ]] && return 0
 
    pre_fix="${cur_color}[${cur_type}][$(date +%F)][$(date +%T)]"
    pos_fix="${COLOR_ORIGIN}"
@@ -70,6 +70,7 @@ Options:
    -B              The virtual machine ip address prefix of tidb
    -k              The numble of tikv instances
    -K              The virtual machine ip address prefix of tikv
+   -m              The virtual machine ip address of monitor
    -h              Display the help message
 "
 }
@@ -80,7 +81,7 @@ then
     exit 1
 fi
 
-optstring=":u:p:v:d:D:b:B:k:K:h"
+optstring=":u:p:v:d:D:b:B:k:K:m:h"
 
 while getopts "$optstring" opt; do
 	case $opt in
@@ -110,6 +111,9 @@ while getopts "$optstring" opt; do
 			;;
 		K)
 			TIKV_IP_PREFIX=${OPTARG}
+			;;
+		m)
+			MONITOR_IP_ADDR=${OPTARG}
 			;;
 		h)
 			print_help
@@ -160,6 +164,7 @@ function generate_inventory() {
 	# start to adjust some variables
 	notice "start to adjust some variables"
 	sed -i "s/deploy_dir\(.*\)/deploy_dir = \/home\/${USERNAME}\/deploy/g" ${TMP_INVENTORY}
+	sed -i "s/ansible_user\(.*\)/ansible_user = ${USERNAME}/g" ${TMP_INVENTORY}
 
 	# modify tidb version
 	sed -i "s/tidb_version\(.*\)/tidb_version = ${TIDB_VERSION}/g" ${TMP_INVENTORY}
@@ -194,14 +199,13 @@ function generate_part_inventory() {
 }
 
 function generate_monitor_inventory() {
-	local ip_suffix=$(( 1+IP_BASE ))
-	local monitor_ip=${PD_IP_PREFIX}.${ip_suffix}
+
 >> ${TMP_INVENTORY} cat << EOF
 [monitoring_servers]
-${monitor_ip}
+${MONITOR_IP_ADDR}
 
 [grafana_servers]
-${monitor_ip}
+${MONITOR_IP_ADDR}
 
 [monitored_servers:children]
 tidb_servers

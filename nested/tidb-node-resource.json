@@ -43,9 +43,88 @@
     "vmStart": 1,
     "ipBase": 9,
     "privateIPAddressType": "Static",
+    "lbPublicIPAddressType": "Static",
+    "lbName": "[parameters('networkSettings').lbName]",
+    "lbID": "[resourceId('Microsoft.Network/loadBalancers', variables('lbName'))]",
+    "lbPublicIPAddressName": "[concat(parameters('machineSettings').machineNamePrefix, 'lb-pubip')]",
+    "lbPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses', variables('lbPublicIPAddressName'))]",
+    "frontendLbName": "[concat(variables('lbName'), '-frontend')]",
+    "backendAddrPoolName": "[concat(variables('lbName'), '-backend')]",
+    "lbRulesName": "[concat(variables('lbName'), '-rules')]",
+    "lbProbeName": "[concat(variables('lbName'), '-probe')]",
     "networkInterfacesName": "[concat('nic-', parameters('machineSettings').machineNamePrefix)]"
   },
   "resources": [
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('lbPublicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "[variables('lbPublicIPAddressType')]",
+        "dnsSettings": {
+          "domainNameLabel": "[uniqueString(resourceGroup().id, deployment().name)]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "name": "[variables('lbName')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('lbPublicIPAddressName'))]"
+      ],
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "[variables('frontendLbName')]",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[variables('lbPublicIPAddressID')]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "[variables('backendAddrPoolName')]"
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "[variables('lbRulesName')]",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('lbID'), '/frontendIPConfigurations/', variables('frontendLbName'))]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('lbID'), '/backendAddressPools/', variables('backendAddrPoolName'))]"
+              },
+              "protocol": "tcp",
+              "frontendPort": "4000",
+              "backendPort": "4000",
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 5,
+              "probe": {
+                "id": "[concat(variables('lbID'), '/probes/', variables('lbProbeName'))]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "[variables('lbProbeName')]",
+            "properties": {
+              "protocol": "tcp",
+              "port": "4000",
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2
+            }
+          }
+        ]
+      }
+    },
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/networkInterfaces",
@@ -55,6 +134,9 @@
       },
       "name": "[concat(variables('networkInterfacesName'), copyIndex(variables('vmStart')))]",
       "location": "[resourceGroup().location]",
+      "dependsOn": [
+          "[concat('Microsoft.Network/loadBalancers/', variables('lbName'))]"
+      ],
       "properties": {
         "ipConfigurations": [
           {
@@ -64,10 +146,18 @@
               "privateIPAddress": "[concat(parameters('machineSettings').machineIpPrefix, add(variables('ipBase'), copyIndex(variables('vmStart'))))]",
               "subnet": {
                 "id": "[parameters('networkSettings').subnetRef]"
-              }
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(variables('lbID'), '/backendAddressPools/', variables('backendAddrPoolName'))]"
+                }
+              ]
             }
           }
-        ]
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'tidb-secgroup')]"
+        }
       }
     },
     {
@@ -114,5 +204,11 @@
         }
       }
     }
-  ]
+  ],
+  "outputs": {
+    "tidbServerDns": {
+      "type": "string",
+      "value": "[concat(reference(variables('lbPublicIPAddressName')).dnsSettings.fqdn, ':4000')]"
+    }
+  }
 }

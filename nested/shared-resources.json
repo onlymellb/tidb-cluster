@@ -145,6 +145,68 @@
           }
         ]
       }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "monitor-secgroup",
+      "location": "[resourceGroup().location]",
+      "properties": {
+          "securityRules": [
+            {
+              "name": "SSH",
+              "properties": {
+                "description": "Allow SSH traffic",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "22",
+                "sourceAddressPrefix": "Internet",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 100,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "grafana-web",
+              "properties": {
+                "description": "Allow secure grafana access",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "3000",
+                "sourceAddressPrefix": "Internet",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 101,
+                "direction": "Inbound"
+              }
+            }
+          ]
+       }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "tidb-secgroup",
+      "location": "[resourceGroup().location]",
+      "properties": {
+          "securityRules": [
+            {
+              "name": "tidb-server",
+              "properties": {
+                "description": "Allow secure tidb access",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "4000",
+                "sourceAddressPrefix": "Internet",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 100,
+                "direction": "Inbound"
+              }
+            }
+          ]
+       }
     }
   ]
 }

@@ -26,12 +26,6 @@
         "Description": "Machine settings object"
       }
     },
-    "vmCount": {
-      "type": "int",
-      "metadata": {
-        "Description": "The number of VM instances to be created"
-      }
-    },
     "adminPassword": {
       "type": "securestring",
       "metadata": {
@@ -40,47 +34,60 @@
     }
   },
   "variables": {
-    "vmStart": 1,
-    "ipBase": 9,
+    "publicIPAddressType": "Dynamic",
     "privateIPAddressType": "Static",
-    "networkInterfacesName": "[concat('nic-', parameters('machineSettings').machineNamePrefix)]"
+    "publicIPAddressName": "[concat('pubip-', parameters('machineSettings').machineName)]",
+    "networkInterfacesName": "[concat('nic-', parameters('machineSettings').machineName)]"
   },
   "resources": [
     {
       "apiVersion": "2015-06-15",
-      "type": "Microsoft.Network/networkInterfaces",
-      "copy": {
-        "name": "[concat(parameters('machineSettings').machineNamePrefix, 'count-copy')]",
-        "count": "[parameters('vmCount')]"
-      },
-      "name": "[concat(variables('networkInterfacesName'), copyIndex(variables('vmStart')))]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
       "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
+        "dnsSettings": {
+          "domainNameLabel": "[uniqueString(resourceGroup().id, deployment().name)]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('networkInterfacesName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+          "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+      ],
       "properties": {
         "ipConfigurations": [
           {
             "name": "ipconfig1",
             "properties": {
               "privateIPAllocationMethod": "[variables('privateIPAddressType')]",
-              "privateIPAddress": "[concat(parameters('machineSettings').machineIpPrefix, add(variables('ipBase'), copyIndex(variables('vmStart'))))]",
+              "privateIPAddress": "[parameters('machineSettings').machineIp]",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(variables('publicIPAddressName')))]"
+              },
               "subnet": {
                 "id": "[parameters('networkSettings').subnetRef]"
               }
             }
           }
-        ]
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'monitor-secgroup')]"
+        }
       }
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
       "apiVersion": "2015-06-15",
-      "copy": {
-        "name": "[concat(parameters('machineSettings').machineNamePrefix, 'count-copy')]",
-        "count": "[parameters('vmCount')]"
-      },
-      "name": "[concat(parameters('machineSettings').machineNamePrefix, copyIndex(variables('vmStart')))]",
+      "name": "[parameters('machineSettings').machineName]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfacesName'), copyIndex(variables('vmStart')))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfacesName'))]"
       ],
       "properties": {
         "availabilitySet": {
@@ -90,7 +97,7 @@
           "vmSize": "[parameters('machineSettings').vmSize]"
         },
         "osProfile": {
-          "computerName": "[concat(parameters('machineSettings').machineNamePrefix, copyIndex(variables('vmStart')))]",
+          "computerName": "[parameters('machineSettings').machineName]",
           "adminUsername": "[parameters('machineSettings').adminUsername]",
           "adminPassword": "[parameters('adminPassword')]"
         },
@@ -99,7 +106,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat(parameters('storageSettings').destinationVhdsContainer, parameters('machineSettings').machineNamePrefix, copyIndex(variables('vmStart')), '.vhd')]"
+              "uri": "[concat(parameters('storageSettings').destinationVhdsContainer, parameters('machineSettings').machineName, '.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -108,11 +115,21 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('networkInterfacesName'), copyIndex(variables('vmStart'))))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfacesName'))]"
             }
           ]
         }
       }
     }
-  ]
+  ],
+  "outputs": {
+    "monitorPublicEndpoint": {
+      "type": "string",
+      "value": "[concat('http://', reference(variables('publicIPAddressName')).dnsSettings.fqdn, ':3000')]"
+    },
+    "monitorPublicIp": {
+       "type": "string",
+       "value": "[reference(variables('publicIPAddressName')).ipAddress]"
+    }
+  }
 }

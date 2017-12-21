@@ -133,6 +133,7 @@ function init_env() {
 	yum install -y git epel-release sshpass
 	yum install -y python-pip
 	pip install ansible==2.4.0
+	chown -R ${USERNAME}.${USERNAME} /mnt/resource
 }
 
 ### Generate ansible's inventory
@@ -163,7 +164,7 @@ function generate_inventory() {
 
 	# start to adjust some variables
 	notice "start to adjust some variables"
-	sed -i "s/deploy_dir\(.*\)/deploy_dir = \/home\/${USERNAME}\/deploy/g" ${TMP_INVENTORY}
+	sed -i "s/deploy_dir\(.*\)/deploy_dir = \/mnt\/resource\/deploy/g" ${TMP_INVENTORY}
 	sed -i "s/ansible_user\(.*\)/ansible_user = ${USERNAME}/g" ${TMP_INVENTORY}
 
 	# modify tidb version

@@ -43,11 +43,21 @@ az group deployment create \
 --parameters @azuredeploy.parameters.json
 ```
 
-* get the monitoring address
+* get the monitor address
 
 ```bash
-echo http://$(az network public-ip list -g test-tidb --query "[?dnsSettings.domainNameLabel=='pd-1'].dnsSettings.fqdn" -otsv):3000
+echo http://$(az network public-ip list -g test-tidb --query "[?name=='pubip-monitor'].dnsSettings.fqdn" -otsv):3000
 
+# grafana login user name and password
 username: admin
 password: admin
+```
+
+* get the tidb server loadBalance dns
+
+```bash
+tidb_dns=$(az network public-ip list -g test-tidb --query "[?name=='tidb-lb-pubip'].dnsSettings.fqdn" -otsv)
+
+# login tidb server
+mysql -uroot -h${tidb_dns} -P4000
 ```

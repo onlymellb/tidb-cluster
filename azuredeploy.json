@@ -87,14 +87,14 @@
     },
     "pdVmSize": {
       "type": "string",
-      "defaultValue": "Standard_A3",
+      "defaultValue": "Standard_A4_v2",
       "metadata": {
         "description": "Virtual machine size for the pd virtual machine"
       }
     },
     "monitorVmSize": {
       "type": "string",
-      "defaultValue": "Standard_A2",
+      "defaultValue": "Standard_A3",
       "metadata": {
         "description": "Virtual machine size for the monitor virtual machine"
       }
@@ -115,7 +115,7 @@
     },
     "tidbVmSize": {
       "type": "string",
-      "defaultValue": "Standard_A4",
+      "defaultValue": "Standard_F8s",
       "metadata": {
         "description": "Virtual machine size for the tidb virtual machine"
       }
@@ -136,7 +136,7 @@
     },
     "tikvVmSize": {
       "type": "string",
-      "defaultValue": "Standard_D12_v2",
+      "defaultValue": "Standard_D13_v2",
       "metadata": {
         "description": "Virtual machine size for the tikv virtual machine"
       }

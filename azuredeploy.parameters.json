@@ -2,11 +2,14 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "storageAccountName": {
-      "value": "tidbclusterdeploy"
+    "storageAccountNamePrefix": {
+      "value": "tidbclusterstorage"
     },
     "virtualNetworkName": {
       "value": "tidbClusterVnet"
+    },
+    "environment": {
+      "value": "AzureChinaCloud"
     },
     "adminUsername": {
         "value": "tidb"
@@ -18,13 +21,13 @@
         "value": "latest"
     },
     "pdCount": {
-        "value": 1
+        "value": 3
     },
     "pdVmSize": {
         "value": "Standard_A4_v2"
     },
     "tidbCount": {
-        "value": 1
+        "value": 2
     },
     "tidbVmSize": {
         "value": "Standard_F8s"

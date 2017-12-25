@@ -125,7 +125,7 @@
     },
     "tidbVmSize": {
       "type": "string",
-      "defaultValue": "Standard_F8s",
+      "defaultValue": "Standard_F4s",
       "metadata": {
         "description": "Virtual machine size for the tidb virtual machine"
       }
@@ -146,7 +146,7 @@
     },
     "tikvVmSize": {
       "type": "string",
-      "defaultValue": "Standard_D13_v2",
+      "defaultValue": "Standard_D12_v2",
       "metadata": {
         "description": "Virtual machine size for the tikv virtual machine"
       }
@@ -183,16 +183,16 @@
       "tikvAVSName": "tikvAvailSet"
     },
     "pdStorageSettings": {
-      "vhdStorageAccountName": "[concat(parameters('storageAccountNamePrefix'), '-pd')]",
-      "destinationVhdsContainer": "[concat('https://', parameters('storageAccountNamePrefix'), '-pd', variables('vmStorageAccountDomain'), '/', variables('vhdContainerName'), '/')]"
+      "vhdStorageAccountName": "[concat(parameters('storageAccountNamePrefix'), 'pd')]",
+      "destinationVhdsContainer": "[concat('https://', parameters('storageAccountNamePrefix'), 'pd', variables('vmStorageAccountDomain'), '/', variables('vhdContainerName'), '/')]"
     },
     "tidbStorageSettings": {
-      "vhdStorageAccountName": "[concat(parameters('storageAccountNamePrefix'), '-tidb')]",
-      "destinationVhdsContainer": "[concat('https://', parameters('storageAccountNamePrefix'), '-tidb', variables('vmStorageAccountDomain'), '/', variables('vhdContainerName'), '/')]"
+      "vhdStorageAccountName": "[concat(parameters('storageAccountNamePrefix'), 'tidb')]",
+      "destinationVhdsContainer": "[concat('https://', parameters('storageAccountNamePrefix'), 'tidb', variables('vmStorageAccountDomain'), '/', variables('vhdContainerName'), '/')]"
     },
     "tikvStorageSettings": {
-      "vhdStorageAccountName": "[concat(parameters('storageAccountNamePrefix'), '-tikv')]",
-      "destinationVhdsContainer": "[concat('https://', parameters('storageAccountNamePrefix'), '-tikv', variables('vmStorageAccountDomain'), '/', variables('vhdContainerName'), '/')]"
+      "vhdStorageAccountName": "[concat(parameters('storageAccountNamePrefix'), 'tikv')]",
+      "destinationVhdsContainer": "[concat('https://', parameters('storageAccountNamePrefix'), 'tikv', variables('vmStorageAccountDomain'), '/', variables('vhdContainerName'), '/')]"
     },
     "pdNetworkSettings": {
       "subnetName": "[parameters('pdSubnetName')]",

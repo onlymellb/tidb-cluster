@@ -56,8 +56,8 @@ password: admin
 * get the tidb server loadBalance dns
 
 ```bash
-tidb_dns=$(az network public-ip list -g test-tidb --query "[?name=='tidb-lb-pubip'].dnsSettings.fqdn" -otsv)
+tidb_lb_ip=$(az network public-ip list -g test-tidb --query "[?name=='tidb-lb-pubip'].ipAddress" -otsv)
 
 # login tidb server
-mysql -uroot -h${tidb_dns} -P4000
+mysql -uroot -h${tidb_lb_ip} -P4000
 ```

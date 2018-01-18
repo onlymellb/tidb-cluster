@@ -170,9 +170,6 @@ function generate_inventory() {
 	# modify tidb version
 	sed -i "s/tidb_version\(.*\)/tidb_version = ${TIDB_VERSION}/g" ${TMP_INVENTORY}
 
-	# turn off machine disk benchmark
-	sed -i "s/machine_benchmark\(.*\)/machine_benchmark = False/g" ${TMP_INVENTORY}
-
 	# turn off the time zone setting and ntpd check
 	sed -i "s/set_timezone\(.*\)/set_timezone = False/g" ${TMP_INVENTORY}
 	sed -i "s/enable_ntpd\(.*\)/enable_ntpd = False/g" ${TMP_INVENTORY}
@@ -217,7 +214,7 @@ EOF
 }
 
 function deploy_tidb_cluster() {
-	local ansible_args="-u ${USERNAME} -e ansible_ssh_pass='${PASSWORD}' -e ansible_become_pass='${PASSWORD}'"
+	local ansible_args="-u ${USERNAME} -e ansible_ssh_pass='${PASSWORD}' -e ansible_become_pass='${PASSWORD}' -e dev_mode=true"
 	ansible-playbook local_prepare.yml ${ansible_args}
 	ansible-playbook bootstrap.yml ${ansible_args}
 	ansible-playbook deploy.yml ${ansible_args}
@@ -231,18 +228,6 @@ RELATIVE_WORK_DIR=`echo ${TIDB_ANSIBLE}|awk -F'[/.]' '{if( $NF=="git")print $(NF
 [[ -d ${RELATIVE_WORK_DIR} ]] && rm -rf ${RELATIVE_WORK_DIR}
 git clone ${TIDB_ANSIBLE}
 cd ${RELATIVE_WORK_DIR}
-# this is a temporary workaround, when the upstream solve this problem, delete this code
-sed -i "s/min_open_fds\(.*\)/min_open_fds: 1000/g" roles/check_config_dynamic/defaults/main.yml
 
 generate_inventory
 deploy_tidb_cluster
-
-echo "username: ${USERNAME}"
-echo "password: ${PASSWORD}"
-echo "tidb version: ${TIDB_VERSION}"
-echo "pd numles: ${PD_NUMBLES}"
-echo "pd ip prefix: ${PD_IP_PREFIX}"
-echo "tidb numbles: ${TIDB_NUMBLES}"
-echo "tidb ip prefix: ${TIDB_IP_PREFIX}"
-echo "tikv numbles: ${TIKV_NUMBLES}"
-echo "tikv ip prefix: ${TIKV_IP_PREFIX}"

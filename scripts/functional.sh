@@ -139,7 +139,7 @@ EOF
 }
 
 function deploy_tidb_cluster() {
-	local ansible_args="-u ${USERNAME} -e ansible_ssh_pass='${PASSWORD}' -e ansible_become_pass='${PASSWORD}' -e dev_mode=true"
+	local ansible_args="-u ${USERNAME} -e ansible_ssh_pass='${PASSWORD}' -e ansible_become_pass='${PASSWORD}'"
 	ansible-playbook local_prepare.yml ${ansible_args}
 	ansible-playbook bootstrap.yml ${ansible_args}
 	ansible-playbook deploy.yml ${ansible_args}

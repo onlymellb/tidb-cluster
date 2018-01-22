@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -xe
 
 RETRY_TIME=20
 DELAY_TIME=10

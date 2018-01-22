@@ -1,6 +1,30 @@
-#!/bin/bash -xe
+#!/bin/bash -e
 
-wget https://raw.githubusercontent.com/onlymellb/tidb-cluster/master/scripts/functional.sh -O functional.sh
+RETRY_TIME=20
+DELAY_TIME=10
+GIT_URL=https://raw.githubusercontent.com/onlymellb/tidb-cluster/master/scripts/functional.sh
+QINIU_URL=http://download.pingcap.org/pingcap/functional.sh
+
+function download_file() {
+	local ret=0
+	wget $1 -O functional.sh || ret=$?
+	if [[ $ret -ne 0 ]]
+	then
+		echo "download functional.sh from $1 failed.">&2
+	else
+		echo "download functional.sh from $1 succeed.">&2
+	fi
+	echo $ret
+}
+
+for i in `seq 0 $RETRY_TIME`
+do
+	ret=`download_file $GIT_URL`
+	[[ $ret -eq 0 ]] && break
+	ret=`download_file $QINIU_URL`
+	[[ $ret -eq 0 ]] && break
+	sleep ${DELAY_TIME}
+done
 
 source ./functional.sh
 
